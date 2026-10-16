@@ -1,6 +1,93 @@
 # garage
 threejs image to voxel 3d bench
 
+## Rerun: pure vision → three.js voxel scene, no Blender (2026-10-16)
+
+The garage is voxel art, so a Blender scene was the wrong target. This rerun builds it the direct way: each model
+looks at `ref.webp` and writes a **three.js scene made of boxes**. No Blender, no Blender MCP, no 3D-model
+generators, no downloaded assets. It has only code, its own eyes (the vision harness, pointed at its own model) and
+headless-Chromium screenshots of its own page. Both models ran **on our own Spark servers** through the same
+`sparks/auto` route: DeepSeek V4.1 Flash first, then the Sparks were swapped to Nemotron 3.5 Super VL for the
+identical task. These are **sequential runs, not a race**.
+
+![Timelapse, each run on its own clock: DeepSeek V4.1 Flash (left), Nemotron 3.5 Super VL (right)](voxel/timelapse/side-by-side.gif)
+
+*One frame every 10 minutes of each run's own clock, same fixed camera and viewport, plus the final frame.
+Per-model GIFs: [DeepSeek](voxel/timelapse/deepseek-v4.1-flash.gif), [Nemotron](voxel/timelapse/nemotron-3.5-super-vl.gif).
+Both live scenes side by side: [`voxel/combined/index.html`](voxel/combined/index.html) (serve the repo with any
+static server).*
+
+![Both final scenes, labelled](voxel/combined/screenshot.png)
+
+### What was held equal
+- The same builder prompt, byte for byte (one file, identical SHA-256 for both runs), the same reference, and the
+  same starter: an empty three.js r180 page with a fixed default camera and a local web server.
+- The same tools: bash/read/write/edit, the vision harness on the builder's own model, and a screenshot helper. pi's
+  `images.blockImages` was on for both, so all looking went through the harness.
+- The same 2 h cap. Neither came close.
+- Separate working folders. An audit of both sessions afterwards shows neither builder touched anything outside
+  its own folder, apart from its own task file and report.
+
+### Results
+
+| Model | Wall time | Tokens in (cached) | Tokens out | Agent turns | Tool calls (errors) | Vision harness | Screenshots | Finished? |
+|---|---|---|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | **16 m 39 s** | 6.58 M (6.36 M) | 92.6 k | 74 | 87 (1) | 51 runs, 84 model calls | 18 | yes |
+| Nemotron 3.5 Super VL | 23 m 31 s | 6.73 M (6.47 M) | 114.5 k | 57 | 60 (5) | 25 runs, 55 model calls | 18 | yes |
+
+- **Tokens** come from the Spark server's own counters, before and after each run: agent plus vision harness. For
+  Nemotron, pi's per-request usage plus the harness log equals the server delta to the token. For DeepSeek, pi
+  records no usage on this route. There, the server counted exactly 158 requests (74 agent turns + 84 vision
+  calls), so nothing else is mixed in. Splits are in each `BUILD.md`.
+- **Errors:** DeepSeek's one error was a Python one-liner it wrote. All five of Nemotron's were malformed `edit`
+  calls.
+
+### Zoomed referee pass
+
+Same referee as the Blender bake-off: GPT-6 Astra, a neutral third model. The same six regions and questions, each
+cropped from the reference and from each builder's final default-view screenshot, judged at 2× zoom. Each pair was
+judged twice, with the reference first and then second (seed 20261016), and the lower score was kept.
+Boxes: [`voxel/referee/regions.json`](voxel/referee/regions.json). Raw verdicts:
+[`voxel/referee/results.jsonl`](voxel/referee/results.jsonl).
+
+| Region (each /30) | DeepSeek | Nemotron |
+|---|---|---|
+| Pegboard + workbench | **17** | 8 |
+| Cabinet, plant, lamps | **11** | 10 |
+| Window + roll-up door | **17** | 11 |
+| Car on its pad | **15** | 11 |
+| Barrels + crate | **13** | 11 |
+| Lower-left props + mat | **14** | 9 |
+| **Total (/180)** | **87** | **60** |
+
+DeepSeek wins all six regions. Its verdicts flipped with presentation order on 6 dimensions, Nemotron's on 11.
+
+**A pixel check, independent of every model**
+([`voxel/referee/sanity.json`](voxel/referee/sanity.json)). Each final screenshot vs the reference:
+- colour-histogram overlap: DeepSeek 0.77, Nemotron 0.56 (the empty starter page scores 0.22);
+- empty background: DeepSeek 23 %, Nemotron 50 %;
+- DeepSeek's shares of the reference's red, yellow, green and sky-blue are near the reference's own. Nemotron has
+  almost no green or sky blue, and only about a third of the red and yellow.
+
+### Reading the two scenes
+- **DeepSeek** has the room most of the way there by its first snapshot at 10 minutes. It has brick walls,
+  pegboard and tools, red drawer units, cabinet and plant, lamps, window, a slatted door with hinges, the pad with
+  yellow markings, barrels, crates and the checkered mat. Then it spent the time comparing crops. Weak spots: the
+  car is a boxy saloon rather than the reference's wedge, its panels are big rather than voxel-fine, and the
+  checkered mat is oversized. It also scaled the room by 1.22 to fill the fixed camera.
+- **Nemotron** got the plan right: two walls, pegboard and bench, cabinet, door, a pad with markings, barrels,
+  crate and mat. The execution is rough. A long black bar crosses the picture: four window-pane calls are missing
+  an argument, so a colour constant became a depth of about 10 million units. Its own vision called it "a thick
+  long black beam", but it didn't find the cause. The car reads as loose white blocks, and the walls are plain
+  grey.
+
+Details per model: [`voxel/deepseek-v4.1-flash/BUILD.md`](voxel/deepseek-v4.1-flash/BUILD.md),
+[`voxel/nemotron-3.5-super-vl/BUILD.md`](voxel/nemotron-3.5-super-vl/BUILD.md).
+
+---
+
+*Below: the first bake-off, which built Blender scenes through a Blender MCP server.*
+
 ![Race timelapse: DeepSeek V4.1 Flash (left) vs Nemotron 3.5 Super VL (right), race clock](timelapse/side-by-side.gif)
 
 *Race timelapse, both builders started together (2026-10-16, 01:59 PDT). DeepSeek finished at 23:01. Nemotron crashed at

@@ -1,0 +1,142 @@
+{
+ "ref": "ref.png (the repo's ref.webp converted to PNG, 1536x864)",
+ "builds": {
+  "deepseek": "deepseek-v4.1-flash/final.png",
+  "nemotron": "nemotron-3.5-super-vl/final.png"
+ },
+ "regions": [
+  {
+   "name": "pegboard_bench",
+   "question": "pegboard with hanging tools (count them), workbench with red drawer units (count drawers), items on the bench",
+   "ref": [
+    140,
+    95,
+    410,
+    430
+   ],
+   "deepseek": [
+    100,
+    120,
+    480,
+    380
+   ],
+   "nemotron": [
+    230,
+    150,
+    360,
+    380
+   ]
+  },
+  {
+   "name": "cabinet_plant_lamps",
+   "question": "wall lamps (count, warm glow), grey cabinet with drawers and doors, potted plant, box on top",
+   "ref": [
+    450,
+    0,
+    480,
+    340
+   ],
+   "deepseek": [
+    480,
+    20,
+    560,
+    330
+   ],
+   "nemotron": [
+    560,
+    40,
+    300,
+    320
+   ]
+  },
+  {
+   "name": "window_door",
+   "question": "window (count panes, blue sky), low shelf under it, roll-up garage door with horizontal slats and frame",
+   "ref": [
+    900,
+    50,
+    636,
+    440
+   ],
+   "deepseek": [
+    840,
+    20,
+    560,
+    420
+   ],
+   "nemotron": [
+    680,
+    40,
+    560,
+    380
+   ]
+  },
+  {
+   "name": "car_pad",
+   "question": "white voxel sports car (shape, black windows, visible wheels count), dark parking pad with yellow/black corner markings, yellow wheel stop",
+   "ref": [
+    260,
+    300,
+    1000,
+    564
+   ],
+   "deepseek": [
+    450,
+    300,
+    760,
+    420
+   ],
+   "nemotron": [
+    480,
+    320,
+    560,
+    320
+   ]
+  },
+  {
+   "name": "right_props",
+   "question": "barrels (count, colours), wooden crate, stacked items",
+   "ref": [
+    1290,
+    410,
+    246,
+    350
+   ],
+   "deepseek": [
+    1080,
+    300,
+    360,
+    280
+   ],
+   "nemotron": [
+    1010,
+    350,
+    200,
+    170
+   ]
+  },
+  {
+   "name": "lowerleft_props",
+   "question": "stacked grey blocks/stones, red toolbox, black mat with yellow pattern",
+   "ref": [
+    40,
+    390,
+    290,
+    374
+   ],
+   "deepseek": [
+    100,
+    260,
+    600,
+    580
+   ],
+   "nemotron": [
+    240,
+    400,
+    500,
+    464
+   ]
+  }
+ ],
+ "note": "Same six regions, questions and reference boxes as the Blender bake-off (referee/regions.json at the repo root); the build boxes were placed on each final screenshot. Judge GPT-6 Astra, each pair twice (reference first / second), seed 20261016, lower score kept."
+}

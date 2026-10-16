@@ -1,0 +1,43 @@
+{
+ "reference": {
+  "red_pct": 1.11,
+  "yellow_pct": 0.96,
+  "white_pct": 7.06,
+  "green_pct": 0.27,
+  "warm_glow_pct": 0.72,
+  "sky_blue_pct": 0.5
+ },
+ "deepseek-v4.1-flash/final.png": {
+  "rmse_vs_ref": 59.1,
+  "hist_intersection": 0.768,
+  "empty_bg_pct": 22.8,
+  "red_pct": 0.83,
+  "yellow_pct": 1.12,
+  "white_pct": 2.84,
+  "green_pct": 0.52,
+  "warm_glow_pct": 0.05,
+  "sky_blue_pct": 0.34
+ },
+ "nemotron-3.5-super-vl/final.png": {
+  "rmse_vs_ref": 65.4,
+  "hist_intersection": 0.561,
+  "empty_bg_pct": 50.4,
+  "red_pct": 0.27,
+  "yellow_pct": 0.35,
+  "white_pct": 7.15,
+  "green_pct": 0.02,
+  "warm_glow_pct": 0.0,
+  "sky_blue_pct": 0.0
+ },
+ "empty starter page (frame 0, baseline)": {
+  "rmse_vs_ref": 64.8,
+  "hist_intersection": 0.215,
+  "empty_bg_pct": 100.0,
+  "red_pct": 0.0,
+  "yellow_pct": 0.0,
+  "white_pct": 0.0,
+  "green_pct": 0.0,
+  "warm_glow_pct": 0.0,
+  "sky_blue_pct": 0.0
+ }
+}

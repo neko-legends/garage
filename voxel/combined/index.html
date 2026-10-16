@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Voxel garage — DeepSeek V4.1 Flash vs Nemotron 3.5 Super VL</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #15181d; color: #e8e8e8; font: 15px/1.35 system-ui, sans-serif; }
+  header { height: 34px; display: flex; align-items: center; justify-content: center; color: #ffd34d; font-weight: 600; }
+  main { display: flex; height: calc(100% - 34px); }
+  section { flex: 1; display: flex; flex-direction: column; border-left: 1px solid #2b3038; }
+  section:first-child { border-left: 0; }
+  .label { padding: 8px 12px; background: #1d2128; text-align: center; font-weight: 600; }
+  .label span { font-weight: 400; color: #b9c0c8; }
+  iframe { flex: 1; width: 100%; border: 0; display: block; }
+</style>
+</head>
+<body>
+<header>Same reference, same prompt, same tools, same Sparks. Sequential runs, not a race. Drag to orbit each scene.</header>
+<main>
+  <section>
+    <div class="label">Built by DeepSeek V4.1 Flash <span>— 16 m 39 s, 6.58 M tokens in / 92.6 k out</span></div>
+    <iframe src="../deepseek-v4.1-flash/index.html" title="DeepSeek V4.1 Flash garage"></iframe>
+  </section>
+  <section>
+    <div class="label">Built by Nemotron 3.5 Super VL <span>— 23 m 31 s, 6.73 M tokens in / 114.5 k out</span></div>
+    <iframe src="../nemotron-3.5-super-vl/index.html" title="Nemotron 3.5 Super VL garage"></iframe>
+  </section>
+</main>
+</body>
+</html>
