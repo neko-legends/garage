@@ -1,0 +1,16 @@
+{"ref": "ref.png (converted from ref.webp)",
+ "builds": {"deepseek": "deepseek-v4.1-flash/render-34.png", "nemotron": "nemotron-3.5-super-vl/render-34.png"},
+ "regions": [
+  {"name": "pegboard_bench", "question": "pegboard with hanging tools (count them), workbench with red drawer units (count drawers), items on the bench",
+   "ref": [140,95,410,430], "deepseek": [100,60,420,340], "nemotron": [280,260,150,330]},
+  {"name": "cabinet_plant_lamps", "question": "wall lamps (count, warm glow), grey cabinet with drawers and doors, potted plant, box on top",
+   "ref": [450,0,480,340], "deepseek": [370,20,580,320], "nemotron": [300,140,330,220]},
+  {"name": "window_door", "question": "window (count panes, blue sky), low shelf under it, roll-up garage door with horizontal slats and frame",
+   "ref": [900,50,636,440], "deepseek": [760,20,520,400], "nemotron": [620,140,380,420]},
+  {"name": "car_pad", "question": "white voxel sports car (shape, black windows, visible wheels count), dark parking pad with yellow/black corner markings, yellow wheel stop",
+   "ref": [260,300,1000,564], "deepseek": [230,300,800,420], "nemotron": [480,410,320,200]},
+  {"name": "right_props", "question": "barrels (count, colours), wooden crate, stacked items",
+   "ref": [1290,410,246,350], "deepseek": [960,350,320,330], "nemotron": [860,270,140,160]},
+  {"name": "lowerleft_props", "question": "stacked grey blocks/stones, red toolbox, black mat with yellow pattern",
+   "ref": [40,390,290,374], "deepseek": [0,230,240,420], "nemotron": [300,480,140,110]}
+ ]}
