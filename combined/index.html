@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Garage bake-off — DeepSeek V4.1 Flash vs Nemotron 3.5 Super VL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #111; overflow: hidden; font-family: system-ui, sans-serif; }
+  .label { color: #ffd34d; background: rgba(0,0,0,.65); padding: 6px 10px; border-radius: 6px; font-size: 15px;
+           white-space: nowrap; border: 1px solid #ffd34d55; }
+  #hint { position: fixed; left: 12px; bottom: 10px; color: #aaa; font-size: 13px; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+               "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="hint">Drag to orbit · scroll to zoom · serve this repo over http (e.g. <code>npx serve .</code>) and open /combined/</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const BUILDS = [
+  { glb: '../deepseek-v4.1-flash/garage.glb',   label: 'Built by DeepSeek V4.1 Flash — 23m 01s, 12.43M in / 125k out tokens' },
+  { glb: '../nemotron-3.5-super-vl/garage.glb', label: 'Built by Nemotron 3.5 Super VL — 15m 54s (solo rerun), 7.29M in / 57k out tokens' },
+];
+const GAP = 4;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+const labels = new CSS2DRenderer(); labels.setSize(innerWidth, innerHeight);
+Object.assign(labels.domElement.style, { position: 'absolute', top: '0', pointerEvents: 'none' });
+document.body.appendChild(labels.domElement);
+
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x15161a);
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 500);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(-10, -14, 20); sun.castShadow = true;
+scene.add(sun);
+
+const loader = new GLTFLoader();
+const loaded = await Promise.all(BUILDS.map(b => loader.loadAsync(b.glb).then(g => ({ ...b, root: g.scene }))));
+const boxes = loaded.map(b => new THREE.Box3().setFromObject(b.root));
+const widths = boxes.map(bx => bx.max.x - bx.min.x);
+const total = widths.reduce((a, b) => a + b, 0) + GAP;
+let x = -total / 2; let maxDepth = 0;
+loaded.forEach((b, i) => {
+  const bx = boxes[i], c = bx.getCenter(new THREE.Vector3());
+  const holder = new THREE.Group(); holder.add(b.root);
+  b.root.position.set(-c.x, -bx.min.y, -c.z);          // glTF is +Y up
+  holder.position.x = x + widths[i] / 2; x += widths[i] + GAP;
+  b.root.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } });
+  scene.add(holder);
+  const div = document.createElement('div'); div.className = 'label'; div.textContent = b.label;
+  const tag = new CSS2DObject(div); tag.position.set(0, (bx.max.y - bx.min.y) + 1.5, 0); holder.add(tag);
+  maxDepth = Math.max(maxDepth, bx.max.z - bx.min.z);
+});
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(total + 12, maxDepth + 14),
+  new THREE.MeshStandardMaterial({ color: 0x202024 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; ground.receiveShadow = true; scene.add(ground);
+camera.position.set(-total * 0.45, total * 0.6, total * 0.85); controls.target.set(0, 1.5, 0); controls.update();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); labels.setSize(innerWidth, innerHeight);
+});
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); labels.render(scene, camera); });
+</script>
+</body>
+</html>
