@@ -1,6 +1,61 @@
 # garage
 threejs image to voxel 3d bench
 
+## Four models, both tests (2026-10-17)
+
+Four models have now run both garage tests with the same prompt file (sha256 `f88e8390…` for voxel, `91540b15…` for
+Blender), the same reference, starter, tools, caps and referee. The two new runs are **DeepSeek V4.1 Flash 1017**
+(DeepSeek's official 1017 checkpoint, 2.9-bit EXL3, on our TensorFold engine on four Sparks) and **GLM-5.3-Flash FP4**
+(vLLM on the same four Sparks). Each ran alone, one test at a time.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="charts/3d-headline-dark.png">
+  <img alt="DeepSeek V4.1 Flash 1017: voxel 98, Blender 108 of 180, code 152 and prose 67 tok/s, MMLU 89.5%. Previous DeepSeek: 87, 79, 155, 72, 88.5%. GLM-5.3-Flash FP4: 103, 98, 82, 36, 88.0%. Nemotron 3.5 Super VL: 60, 44, 185, 95, 85.0%" src="charts/3d-headline-light.png">
+</picture>
+
+| Referee total (/180) | DeepSeek V4.1 Flash 1017 | DeepSeek V4.1 Flash (previous) | GLM-5.3-Flash FP4 | Nemotron 3.5 Super VL |
+|---|---:|---:|---:|---:|
+| Voxel (three.js code) | 98 | 87 | **103** | 60 |
+| Blender over MCP | **108** | 79 | 98 | 44 |
+| Wall time, voxel | 26 m 51 s | **16 m 39 s** | 82 m 31 s | 23 m 31 s |
+| Wall time, Blender | 34 m 44 s | 23 m 01 s ¹ | 47 m 49 s | **15 m 54 s** ² |
+
+- **1017** has the top Blender score (108; GLM 98, previous DeepSeek 79) and is second on voxel (98; GLM 103). It beats
+  the previous DeepSeek on both tests (+11 voxel, +29 Blender), and it took 1.6× (voxel) and 1.5× (Blender) its time.
+- **GLM** has the top voxel score and is second on Blender, but it is the slowest on both (82.5 and 47.8 min).
+- **Read these as single samples.** One build per model per test, scored once by one judge (GPT-6 Astra; each region
+  judged in both presentation orders, lower score kept, seed 20261016). A gap of a few points says nothing about
+  significance.
+- ¹ The previous DeepSeek's Blender run used a hosted endpoint in a two-model race, not the Sparks.
+  ² Nemotron's Blender figure is its solo rerun (its race attempt crashed, see below). GLM's voxel window also carried
+  some other jobs' short requests on the same engine (under 1 % of its tokens); its Blender window was clean.
+
+**Where each model wins**, region by region:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="charts/3d-regions-dark.png">
+  <img alt="Per-region referee scores out of 30 for voxel and Blender. 1017 leads voxel cabinet/plant/lamps (24) and car (17) and leads or ties five Blender regions at 15-19; GLM leads voxel window (19) and Blender pegboard (18); previous DeepSeek and GLM lead the voxel lower-left props (14)" src="charts/3d-regions-light.png">
+</picture>
+
+The final scenes, labelled:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="charts/3d-renders-voxel-dark.png">
+  <img alt="Reference and the four final voxel scenes: DeepSeek 1017 98, previous DeepSeek 87, GLM 103, Nemotron 60 of 180" src="charts/3d-renders-voxel-light.png">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="charts/3d-renders-blender-dark.png">
+  <img alt="Reference and the four final Blender renders: DeepSeek 1017 108, previous DeepSeek 79, GLM 98, Nemotron 44 of 180" src="charts/3d-renders-blender-light.png">
+</picture>
+
+Wall time and scores as separate charts: [`charts/3d-wall-time-light.png`](charts/3d-wall-time-light.png),
+[`charts/3d-scores-light.png`](charts/3d-scores-light.png) (dark versions next to them). Build records:
+[1017 voxel](voxel/deepseek-v4.1-flash-1017/BUILD.md), [1017 Blender](deepseek-v4.1-flash-1017/BUILD.md),
+[GLM voxel](voxel/glm-5.3-flash/BUILD.md), [GLM Blender](glm-5.3-flash/BUILD.md).
+
+---
+
 ## Rerun: pure vision → three.js voxel scene, no Blender (2026-10-16)
 
 The garage is voxel art, so a Blender scene was the wrong target. This rerun builds it the direct way: each model
@@ -34,6 +89,8 @@ static server).*
 |---|---|---|---|---|---|---|---|---|
 | DeepSeek V4.1 Flash | **16 m 39 s** | 6.58 M (6.36 M) | 92.6 k | 74 | 87 (1) | 51 runs, 84 model calls | 18 | yes |
 | Nemotron 3.5 Super VL | 23 m 31 s | 6.73 M (6.47 M) | 114.5 k | 57 | 60 (5) | 25 runs, 55 model calls | 18 | yes |
+| DeepSeek V4.1 Flash 1017 (2026-10-17) | 26 m 51 s | 9.34 M (9.08 M) | 159.8 k | 74 | 73 (2) | 26 runs, 39 model calls | 13 | yes |
+| GLM-5.3-Flash FP4 (2026-10-17) | 82 m 31 s | 14.63 M (14.34 M) ³ | 290.0 k ³ | 81 | 81 (3) | 55 runs, 76 model calls | 11 | yes |
 
 - **Tokens** come from the Spark server's own counters, before and after each run: agent plus vision harness. For
   Nemotron, pi's per-request usage plus the harness log equals the server delta to the token. For DeepSeek, pi
@@ -41,6 +98,11 @@ static server).*
   calls), so nothing else is mixed in. Splits are in each `BUILD.md`.
 - **Errors:** DeepSeek's one error was a Python one-liner it wrote. All five of Nemotron's were malformed `edit`
   calls.
+- **1017** ran on the same engine, image and settings as the DeepSeek run, with DeepSeek's 1017 checkpoint loaded
+  (113 requests = 74 turns + 39 vision calls, exact). Its two errors were Python one-liners importing modules that
+  are not installed. **GLM** ran on vLLM on the same Sparks.
+- ³ GLM's window also carried 67 short requests from other jobs on the same engine (well under 1 % of the tokens), so
+  its token figures are an upper bound. Details in [`voxel/glm-5.3-flash/BUILD.md`](voxel/glm-5.3-flash/BUILD.md).
 
 ### Zoomed referee pass
 
@@ -50,17 +112,19 @@ judged twice, with the reference first and then second (seed 20261016), and the 
 Boxes: [`voxel/referee/regions.json`](voxel/referee/regions.json). Raw verdicts:
 [`voxel/referee/results.jsonl`](voxel/referee/results.jsonl).
 
-| Region (each /30) | DeepSeek | Nemotron |
-|---|---|---|
-| Pegboard + workbench | **17** | 8 |
-| Cabinet, plant, lamps | **11** | 10 |
-| Window + roll-up door | **17** | 11 |
-| Car on its pad | **15** | 11 |
-| Barrels + crate | **13** | 11 |
-| Lower-left props + mat | **14** | 9 |
-| **Total (/180)** | **87** | **60** |
+| Region (each /30) | DeepSeek | Nemotron | DeepSeek 1017 | GLM-5.3-Flash |
+|---|---|---|---|---|
+| Pegboard + workbench | **17** | 8 | 16 | **17** |
+| Cabinet, plant, lamps | 11 | 10 | **24** | 23 |
+| Window + roll-up door | 17 | 11 | 18 | **19** |
+| Car on its pad | 15 | 11 | **17** | 16 |
+| Barrels + crate | 13 | 11 | **14** | **14** |
+| Lower-left props + mat | **14** | 9 | 9 | **14** |
+| **Total (/180)** | **87** | **60** | **98** | **103** |
 
-DeepSeek wins all six regions. Its verdicts flipped with presentation order on 6 dimensions, Nemotron's on 11.
+Between the first two, DeepSeek wins all six regions. Its verdicts flipped with presentation order on 6 dimensions, Nemotron's on 11.
+The 2026-10-17 runs were scored the same way, one build at a time with the same seed (1017: [`results-d17.jsonl`](voxel/referee/results-d17.jsonl), 9 flips; GLM: [`results-glm.jsonl`](voxel/referee/results-glm.jsonl), 4 flips).
+Bold marks the best of the four in each region.
 
 **A pixel check, independent of every model**
 ([`voxel/referee/sanity.json`](voxel/referee/sanity.json)). Each final screenshot vs the reference:
@@ -68,6 +132,10 @@ DeepSeek wins all six regions. Its verdicts flipped with presentation order on 6
 - empty background: DeepSeek 23 %, Nemotron 50 %;
 - DeepSeek's shares of the reference's red, yellow, green and sky-blue are near the reference's own. Nemotron has
   almost no green or sky blue, and only about a third of the red and yellow.
+- 2026-10-17, same script: 1017 0.47 overlap / 2 % empty (its scene is darker and warmer, with a navy sky where the
+  reference is grey), GLM 0.69 / 0 % ([`sanity-d17.json`](voxel/referee/sanity-d17.json),
+  [`sanity-glm.json`](voxel/referee/sanity-glm.json)). The pixel check ranks 1017 lowest on overlap while the
+  referee ranks it second; it measures colour, not objects.
 
 ### Reading the two scenes
 - **DeepSeek** has the room most of the way there by its first snapshot at 10 minutes. It has brick walls,
@@ -81,8 +149,17 @@ DeepSeek wins all six regions. Its verdicts flipped with presentation order on 6
   long black beam", but it didn't find the cause. The car reads as loose white blocks, and the walls are plain
   grey.
 
+- **DeepSeek 1017** (2026-10-17) scores best of the four on the cabinet corner (24/30) and the car (17). Its weak
+  spot is the lower-left corner (9): a stack of dark crates where the reference has grey blocks, a red toolbox and a
+  mat. It measured the reference's pixels itself and used the vision harness about half as often as the previous
+  DeepSeek (39 vs 84 calls).
+- **GLM-5.3-Flash** (2026-10-17) has no weak region (its lowest is 14/30, the highest floor of the four) and has the top total, but it spent about
+  35 minutes on its inventory before writing the scene.
+
 Details per model: [`voxel/deepseek-v4.1-flash/BUILD.md`](voxel/deepseek-v4.1-flash/BUILD.md),
-[`voxel/nemotron-3.5-super-vl/BUILD.md`](voxel/nemotron-3.5-super-vl/BUILD.md).
+[`voxel/nemotron-3.5-super-vl/BUILD.md`](voxel/nemotron-3.5-super-vl/BUILD.md),
+[`voxel/deepseek-v4.1-flash-1017/BUILD.md`](voxel/deepseek-v4.1-flash-1017/BUILD.md),
+[`voxel/glm-5.3-flash/BUILD.md`](voxel/glm-5.3-flash/BUILD.md).
 
 ---
 
@@ -119,9 +196,10 @@ tool calls are recorded too.
 |---|---|---|
 | ![ref](ref.webp) | ![DeepSeek](deepseek-v4.1-flash/render-34.png) | ![Nemotron](nemotron-3.5-super-vl/render-34.png) |
 
-Each builder's own 3/4 render is shown. Front and top views, the `.blend`, the GLB and a build record are in
+Each builder's own 3/4 render is shown (the 2026-10-17 renders are in the [four-model grid](#four-models-both-tests-2026-10-17)). Front and top views, the `.blend`, the GLB and a build record are in
 [`deepseek-v4.1-flash/`](deepseek-v4.1-flash/BUILD.md) and [`nemotron-3.5-super-vl/`](nemotron-3.5-super-vl/BUILD.md).
 Nemotron's crashed race build is in [`nemotron-3.5-super-vl/race-attempt/`](nemotron-3.5-super-vl/race-attempt/).
+The 2026-10-17 builds: [`deepseek-v4.1-flash-1017/`](deepseek-v4.1-flash-1017/BUILD.md) and [`glm-5.3-flash/`](glm-5.3-flash/BUILD.md).
 
 ## Results
 
@@ -130,6 +208,8 @@ Nemotron's crashed race build is in [`nemotron-3.5-super-vl/race-attempt/`](nemo
 | DeepSeek V4.1 Flash | race | **23 m 01 s** | 12.43 M (12.30 M cached) | 125.4 k | 87 | 25 / 2 | 1 | 18 runs, 22 model calls | **yes, the race's only finisher** |
 | Nemotron 3.5 Super VL | race | 22 m 54 s | 7.50 M (7.29 M cached) | 99.0 k | 66 | 5 / 4 | 4 | 0 (looked in the wrong folder) | **no, crashed** (server rejected a 9-image request; the limit is 8) |
 | Nemotron 3.5 Super VL | solo rerun¹ | **15 m 54 s** | 7.29 M (7.09 M cached) | 57.4 k | 76 | 21 / 8 | 3 | 14 runs, 40 model calls | yes |
+| DeepSeek V4.1 Flash 1017 | solo, 2026-10-17 ² | 34 m 44 s | 17.39 M (agent; 17.43 M with harness, 17.15 M cached) | 245.3 k | 116 | 32 / 1 | 0 | 30 runs, 38 model calls | yes |
+| GLM-5.3-Flash FP4 | solo, 2026-10-17 ² | 47 m 49 s | 17.47 M (agent; 17.55 M with harness, 17.36 M cached) | 133.9 k | 114 | 43 / 1 | 1 | 30 runs, 34 model calls | yes |
 
 - **Tokens** are pi's per-request usage. "In" includes cache reads. Vision-harness tokens are separate: DeepSeek
   40.4 k in / 12.5 k out, Nemotron rerun 72.4 k / 9.3 k. For the rerun, the Spark server's own token counters moved by
@@ -139,6 +219,12 @@ Nemotron's crashed race build is in [`nemotron-3.5-super-vl/race-attempt/`](nemo
   server's 8-image-per-request limit. The rerun is the same task, alone, after the race, with **one labelled change**:
   pi's `images.blockImages` was on, so Nemotron could see images only through the vision harness. That is how DeepSeek
   worked all along, because pi treats DeepSeek V4.1 Flash as text-only. It is not a race result.
+- **² The 2026-10-17 runs** are solo runs on our four Sparks with the rerun's setup (`images.blockImages` on, its own
+  fresh Blender on its own port). 1017 ran on our TensorFold engine, GLM on vLLM. pi records no usage on these routes,
+  so tokens come from the Spark server's counters: the agent's share is the server delta minus the harness's own log,
+  and the request counts reconcile exactly (1017: 144 = 106 turns + 38 vision calls; GLM: 149 = 115 + 34). One 1017
+  turn hit the output cap after 8 minutes of reasoning without a tool call; the worker wrapper resumed the session
+  once and the build went on (counted in the totals).
 - **Time cap and memory.** Neither builder came near the 2.5 h cap. Free memory stayed above 12.8 GB throughout,
   logged every 2 minutes.
 
@@ -165,17 +251,19 @@ elements, counts, layout, colour, style and detail at zoom.
 - **Files:** the crop boxes are in [`referee/regions.json`](referee/regions.json) and the raw verdicts in
   [`referee/results.jsonl`](referee/results.jsonl).
 
-| Region (each /30) | DeepSeek | Nemotron (rerun) |
-|---|---|---|
-| Pegboard + workbench | **15** | 4 |
-| Cabinet, plant, lamps | **17** | 5 |
-| Window + roll-up door | 7 | **8** |
-| Car on its pad | **15** | 8 |
-| Barrels + crate | **11** | 9 |
-| Lower-left props + mat | **14** | 10 |
-| **Total (/180)** | **79** | **44** |
+| Region (each /30) | DeepSeek | Nemotron (rerun) | DeepSeek 1017 | GLM-5.3-Flash |
+|---|---|---|---|---|
+| Pegboard + workbench | 15 | 4 | 17 | **18** |
+| Cabinet, plant, lamps | 17 | 5 | **19** | 16 |
+| Window + roll-up door | 7 | 8 | **19** | **19** |
+| Car on its pad | 15 | 8 | **19** | 16 |
+| Barrels + crate | 11 | 9 | **19** | 15 |
+| Lower-left props + mat | 14 | 10 | **15** | 14 |
+| **Total (/180)** | **79** | **44** | **108** | **98** |
 
-Under Kai's pass rule, **neither garage counts as "recreated"**: every region still has missing elements or wrong counts.
+Bold marks the best of the four. The 2026-10-17 builds were scored the same way, one at a time with the same seed ([`results-d17.jsonl`](referee/results-d17.jsonl), [`results-glm.jsonl`](referee/results-glm.jsonl)). 1017 leads or ties five of the six regions; GLM leads the pegboard and ties the window.
+
+Under Kai's pass rule, **none of the four garages counts as "recreated"**: every region still has missing elements or wrong counts. The best region score is 19/30, and fine detail scores 1–2 everywhere.
 
 **Judgement.** DeepSeek V4.1 Flash built the better garage, and it isn't close. It matched the reference's camera,
 palette and layout: brick walls, a pegboard with readable tools, red drawer units, the cabinet with its plant, two warm
