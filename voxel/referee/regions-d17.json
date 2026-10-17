@@ -1,0 +1,104 @@
+{
+ "ref": "ref.png (the repo's ref.webp converted to PNG, 1536x864)",
+ "builds": {
+  "d17": "deepseek-v4.1-flash-1017/final.png"
+ },
+ "regions": [
+  {
+   "name": "pegboard_bench",
+   "question": "pegboard with hanging tools (count them), workbench with red drawer units (count drawers), items on the bench",
+   "ref": [
+    140,
+    95,
+    410,
+    430
+   ],
+   "d17": [
+    200,
+    140,
+    310,
+    360
+   ]
+  },
+  {
+   "name": "cabinet_plant_lamps",
+   "question": "wall lamps (count, warm glow), grey cabinet with drawers and doors, potted plant, box on top",
+   "ref": [
+    450,
+    0,
+    480,
+    340
+   ],
+   "d17": [
+    300,
+    80,
+    400,
+    345
+   ]
+  },
+  {
+   "name": "window_door",
+   "question": "window (count panes, blue sky), low shelf under it, roll-up garage door with horizontal slats and frame",
+   "ref": [
+    900,
+    50,
+    636,
+    440
+   ],
+   "d17": [
+    690,
+    60,
+    470,
+    380
+   ]
+  },
+  {
+   "name": "car_pad",
+   "question": "white voxel sports car (shape, black windows, visible wheels count), dark parking pad with yellow/black corner markings, yellow wheel stop",
+   "ref": [
+    260,
+    300,
+    1000,
+    564
+   ],
+   "d17": [
+    360,
+    330,
+    710,
+    440
+   ]
+  },
+  {
+   "name": "right_props",
+   "question": "barrels (count, colours), wooden crate, stacked items",
+   "ref": [
+    1290,
+    410,
+    246,
+    350
+   ],
+   "d17": [
+    1050,
+    360,
+    220,
+    200
+   ]
+  },
+  {
+   "name": "lowerleft_props",
+   "question": "stacked grey blocks/stones, red toolbox, black mat with yellow pattern",
+   "ref": [
+    40,
+    390,
+    290,
+    374
+   ],
+   "d17": [
+    240,
+    450,
+    170,
+    190
+   ]
+  }
+ ]
+}
