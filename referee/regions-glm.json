@@ -1,0 +1,105 @@
+{
+ "ref": "ref.png (converted from ref.webp)",
+ "builds": {
+  "glm": "glm-5.3-flash/render-34.png"
+ },
+ "regions": [
+  {
+   "name": "pegboard_bench",
+   "question": "pegboard with hanging tools (count them), workbench with red drawer units (count drawers), items on the bench",
+   "ref": [
+    140,
+    95,
+    410,
+    430
+   ],
+   "glm": [
+    380,
+    0,
+    190,
+    230
+   ]
+  },
+  {
+   "name": "cabinet_plant_lamps",
+   "question": "wall lamps (count, warm glow), grey cabinet with drawers and doors, potted plant, box on top",
+   "ref": [
+    450,
+    0,
+    480,
+    340
+   ],
+   "glm": [
+    440,
+    0,
+    230,
+    225
+   ]
+  },
+  {
+   "name": "window_door",
+   "question": "window (count panes, blue sky), low shelf under it, roll-up garage door with horizontal slats and frame",
+   "ref": [
+    900,
+    50,
+    636,
+    440
+   ],
+   "glm": [
+    660,
+    80,
+    350,
+    300
+   ]
+  },
+  {
+   "name": "car_pad",
+   "question": "white voxel sports car (shape, black windows, visible wheels count), dark parking pad with yellow/black corner markings, yellow wheel stop",
+   "ref": [
+    260,
+    300,
+    1000,
+    564
+   ],
+   "glm": [
+    370,
+    255,
+    440,
+    220
+   ]
+  },
+  {
+   "name": "right_props",
+   "question": "barrels (count, colours), wooden crate, stacked items",
+   "ref": [
+    1290,
+    410,
+    246,
+    350
+   ],
+   "glm": [
+    580,
+    455,
+    170,
+    170
+   ]
+  },
+  {
+   "name": "lowerleft_props",
+   "question": "stacked grey blocks/stones, red toolbox, black mat with yellow pattern",
+   "ref": [
+    40,
+    390,
+    290,
+    374
+   ],
+   "glm": [
+    160,
+    270,
+    175,
+    110
+   ]
+  }
+ ],
+ "note": "Same six regions, questions and reference boxes as referee/regions.json; the build boxes were placed on GLM's render-34.png by the orchestrator, as before. Judge GPT-6 Astra, each pair twice (reference first / second), seed 20261016, lower score kept. referee.py unchanged."
+}
