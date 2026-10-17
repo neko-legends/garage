@@ -1,0 +1,44 @@
+{
+ "reference": {
+  "red_pct": 1.11,
+  "yellow_pct": 0.96,
+  "white_pct": 7.06,
+  "green_pct": 0.27,
+  "warm_glow_pct": 0.72,
+  "sky_blue_pct": 0.5
+ },
+ "glm-5.3-flash/render-34.png": {
+  "rmse_vs_ref": 64.5,
+  "hist_intersection": 0.531,
+  "empty_bg_pct": 0.0,
+  "red_pct": 0.63,
+  "yellow_pct": 0.44,
+  "white_pct": 15.64,
+  "green_pct": 0.61,
+  "warm_glow_pct": 0.34,
+  "sky_blue_pct": 0.27
+ },
+ "deepseek-v4.1-flash/render-34.png": {
+  "rmse_vs_ref": 67.0,
+  "hist_intersection": 0.493,
+  "empty_bg_pct": 1.0,
+  "red_pct": 0.83,
+  "yellow_pct": 0.3,
+  "white_pct": 0.43,
+  "green_pct": 0.0,
+  "warm_glow_pct": 0.25,
+  "sky_blue_pct": 0.0
+ },
+ "nemotron-3.5-super-vl/render-34.png": {
+  "rmse_vs_ref": 92.4,
+  "hist_intersection": 0.092,
+  "empty_bg_pct": 0.0,
+  "red_pct": 0.02,
+  "yellow_pct": 0.01,
+  "white_pct": 24.85,
+  "green_pct": 0.0,
+  "warm_glow_pct": 0.0,
+  "sky_blue_pct": 0.0
+ },
+ "note": "Extra, not part of the 2026-10-16 Blender pipeline: the voxel run's pixel check (sanity.py) on each render-34.png vs ref.png. empty_bg_pct measures the three.js starter's background colour and is not meaningful for Blender renders."
+}
