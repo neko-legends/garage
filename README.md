@@ -8,6 +8,10 @@ Blender), the same reference, starter, tools, caps and referee. The two new runs
 (DeepSeek's official 1017 checkpoint, 2.9-bit EXL3, on our TensorFold engine on four Sparks) and **GLM-5.3-Flash FP4**
 (vLLM on the same four Sparks). Each ran alone, one test at a time.
 
+A fifth arm joined later on a different brief — **Kimi K3.1 Pro**, one self-contained three.js file with three fixed
+cameras, 9 m 12 s. It is not in the tables below because the brief and the scoring are not the same; see
+[Kimi K3.1 Pro](#kimi-k31-pro-one-threejs-file-three-fixed-cameras-2026-10-23).
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="charts/3d-headline-dark.png">
   <img alt="DeepSeek V4.1 Flash 1017: voxel 98, Blender 108 of 180, code 152 and prose 67 tok/s, MMLU 89.5%. Previous DeepSeek: 87, 79, 155, 72, 88.5%. GLM-5.3-Flash FP4: 103, 98, 82, 36, 88.0%. Nemotron 3.5 Super VL: 60, 44, 185, 95, 85.0%" src="charts/3d-headline-light.png">
@@ -53,6 +57,49 @@ Wall time and scores as separate charts: [`charts/3d-wall-time-light.png`](chart
 [`charts/3d-scores-light.png`](charts/3d-scores-light.png) (dark versions next to them). Build records:
 [1017 voxel](voxel/deepseek-v4.1-flash-1017/BUILD.md), [1017 Blender](deepseek-v4.1-flash-1017/BUILD.md),
 [GLM voxel](voxel/glm-5.3-flash/BUILD.md), [GLM Blender](glm-5.3-flash/BUILD.md).
+
+---
+
+## Kimi K3.1 Pro: one three.js file, three fixed cameras (2026-10-23)
+
+A fifth arm, on a **different brief**, so it is not a fifth row in the table above: one self-contained `index.html`
+(three.js from a CDN, no textures, no models, no Blender, no voxelising) and three required cameras —
+`?view=front`, `?view=iso`, `?view=top` — instead of a view of the model's choosing. **Kimi K3.1 Pro** ran on its
+subscription lane through pi, one run, alone.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="charts/3d-kimi-renders-dark.png">
+  <img alt="Reference photo and the three required camera views from Kimi K3.1 Pro's single-file three.js garage" src="charts/3d-kimi-renders-light.png">
+</picture>
+
+| | Kimi K3.1 Pro |
+|---|---:|
+| Wall time | **9 m 12 s** |
+| Tool calls | 27 (12 shell, 9 read, 3 write, 3 edit) |
+| Tokens | 39.4 k in / 20.6 k out |
+| Self-checks | 6 screenshots viewed before it called itself done |
+| Console errors at load | 6 (one NaN geometry on the car) |
+| Deliverable | `index.html`, 17,940 bytes, one file |
+
+What it got right is the composition, and that is the part that is easy to get wrong: the reference is itself a
+cutaway — two walls visible, no ceiling, the car angled about 45° across a tiled floor — and the build reproduces all
+four of those exactly, not a stylised reinterpretation of them. Also matching: the white car on the black
+hazard-striped pad, the pegboard and red drawer cabinets on the left, the roll-up door and blue window on the right,
+the warm wall sconces, the plant and radio on the back cabinet.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="charts/3d-kimi-wall-dark.png">
+  <img alt="Wall time per garage build: voxel and Blender panels, and Kimi's single-file three.js arm at 9 minutes 12 seconds" src="charts/3d-kimi-wall-light.png">
+</picture>
+
+- **It is fast, and speed is the least interesting thing about it.** At 9 m 12 s it is quicker than every voxel and
+  Blender build here, but it also ran a shorter brief with no referee and no feedback loop, so read the number as
+  "this brief, this model", not as a ranking.
+- **One real defect:** two malformed hull geometries inside the car group — 26 NaN floats, and one position array
+  whose length is not a multiple of three. It renders and the car reads correctly, but the builder's own filtered
+  console check reported zero errors and the page actually logs six. Shipped is not the same as finished.
+- **Caveats:** single run, single build, no referee score; the screenshots were re-taken by the orchestrator, not
+  taken on the builder's word. Run record and reproduction steps: [`kimi-k3.1-pro/BUILD.md`](kimi-k3.1-pro/BUILD.md).
 
 ---
 

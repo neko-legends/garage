@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Concrete Garage — Three.js</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#343638}
+    canvas{display:block;width:100%;height:100%}
+    #label{position:fixed;left:18px;bottom:15px;color:#d8d5ca;font:11px/1.4 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;opacity:.62;pointer-events:none}
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+<div id="label">Garage 03 · <span id="viewName"></span></div>
+<script type="module">
+import * as THREE from 'three';
+
+const view = ['front','iso','top'].includes(new URLSearchParams(location.search).get('view'))
+  ? new URLSearchParams(location.search).get('view') : 'front';
+document.getElementById('viewName').textContent = view;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x343638);
+const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = .98;
+document.body.prepend(renderer.domElement);
+
+const M = {
+  concrete:new THREE.MeshStandardMaterial({color:0x8c8b84,roughness:.94,metalness:.02}),
+  mortar:new THREE.MeshStandardMaterial({color:0x5b5c58,roughness:1}),
+  dark:new THREE.MeshStandardMaterial({color:0x242729,roughness:.82,metalness:.15}),
+  black:new THREE.MeshStandardMaterial({color:0x111416,roughness:.72}),
+  steel:new THREE.MeshStandardMaterial({color:0x777b7b,roughness:.48,metalness:.65}),
+  paleSteel:new THREE.MeshStandardMaterial({color:0xaeb2af,roughness:.42,metalness:.55}),
+  red:new THREE.MeshStandardMaterial({color:0xa71916,roughness:.5,metalness:.35}),
+  yellow:new THREE.MeshStandardMaterial({color:0xe6ad16,roughness:.55,metalness:.18}),
+  white:new THREE.MeshStandardMaterial({color:0xe5e5df,roughness:.48,metalness:.15,flatShading:false,side:THREE.DoubleSide}),
+  glass:new THREE.MeshStandardMaterial({color:0x101a20,roughness:.2,metalness:.55,side:THREE.DoubleSide}),
+  rubber:new THREE.MeshStandardMaterial({color:0x111213,roughness:.96}),
+  wood:new THREE.MeshStandardMaterial({color:0x76502e,roughness:.88}),
+  green:new THREE.MeshStandardMaterial({color:0x245c2b,roughness:.7,metalness:.22}),
+  blueGlass:new THREE.MeshStandardMaterial({color:0x4e9bb4,emissive:0x1e607b,emissiveIntensity:.55,roughness:.25,metalness:.12}),
+  warm:new THREE.MeshStandardMaterial({color:0xffd76a,emissive:0xffb52e,emissiveIntensity:3}),
+  lamp:new THREE.MeshStandardMaterial({color:0xfff4d6,emissive:0xffe7ae,emissiveIntensity:2.4}),
+  tail:new THREE.MeshStandardMaterial({color:0x8f0c08,emissive:0xe52316,emissiveIntensity:.8})
+};
+const unitBox = new THREE.BoxGeometry(1,1,1);
+function box(size,pos,mat=M.concrete,parent=scene,name=''){
+  const o=new THREE.Mesh(unitBox,mat); o.scale.set(...size); o.position.set(...pos);
+  o.castShadow=true;o.receiveShadow=true;o.name=name;parent.add(o);return o;
+}
+function cyl(r,depth,pos,mat,parent=scene,segments=20){
+  const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,depth,segments),mat);
+  o.position.set(...pos);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;
+}
+function quad(verts,mat,parent=scene){
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts.flat(),3));
+  g.setIndex([0,1,2,0,2,3]);g.computeVertexNormals();
+  const m=new THREE.Mesh(g,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+function hull(sections,mat,parent){
+  // Each section is [z, halfWidth, bottomY, topY], ordered front to rear.
+  const v=[]; for(const [z,w,b,t] of sections)v.push([-w,b,z],[w,b,z],[w,t,z],[-w,t,z]);
+  const idx=[];
+  const face=(a,b,c,d)=>idx.push(a,b,c,a,c,d);
+  face(0,3,2,1);
+  for(let s=0;s<sections.length-1;s++){
+    const a=s*4,b=(s+1)*4;
+    face(a,b,b+3,a+3); face(a+1,a+2,b+2,b+1); face(a+3,b+3,b+2,a+2); face(a,a+1,b+1,b);
+  }
+  const n=(sections.length-1)*4;face(n,n+1,n+2,n+3);
+  for(let i=0;i<idx.length;i+=3){const t=idx[i+1];idx[i+1]=idx[i+2];idx[i+2]=t;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();
+  const m=new THREE.Mesh(g,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+let seed=17;function rnd(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}
+
+// Floor slab and individually jointed concrete tiles.
+box([12.5,.28,11.5],[0,-.22,0],new THREE.MeshStandardMaterial({color:0x555753,roughness:1}),scene,'floor slab');
+const floorMats=Array.from({length:7},(_,i)=>new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(.12,.025,.35+i*.016),roughness:.94}));
+for(let ix=0;ix<18;ix++)for(let iz=0;iz<16;iz++){
+  box([.654,.09,.674],[-5.72+ix*.67,-.035,-5.22+iz*.69],floorMats[Math.floor(rnd()*floorMats.length)],scene,'floor tile');
+}
+// Dark drain and yellow service mark in the front-left corner.
+box([1.35,.035,1.05],[-4.35,.035,4.25],M.dark);
+for(let i=0;i<4;i++)for(let j=0;j<3;j++)if((i+j)%2===0)box([.16,.025,.16],[-4.66+i*.2,.061,4.05+j*.2],M.yellow);
+
+// Cinder-block walls: full rear and left elevations, low cutaway front/right walls.
+const blockMats=Array.from({length:6},(_,i)=>new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(.12,.025,.40+i*.020),roughness:.96}));
+const architecture=new THREE.Group();architecture.name='four walls and ceiling';scene.add(architecture);
+for(let row=0;row<13;row++){
+  const y=.16+row*.31, offset=(row%2)*.31;
+  for(let col=0;col<20;col++){
+    const x=-5.72+col*.61+offset;if(x>5.83)continue;
+    const inDoor=x>2.25&&x<5.75&&y<3.42;
+    const inWindow=x>-.95&&x<1.25&&y>1.7&&y<3.22;
+    if(!inDoor&&!inWindow)box([.592,.294,.25],[x,y,-5.5],blockMats[Math.floor(rnd()*6)],architecture,'rear wall block');
+  }
+  for(let col=0;col<18;col++){
+    const z=-5.2+col*.61+offset;if(z>5.35)continue;
+    box([.25,.294,.592],[-6,y,z],blockMats[Math.floor(rnd()*6)],architecture,'left wall block');
+  }
+}
+box([.25,4.15,.3],[-6,2.02,-5.5],M.mortar,architecture);
+box([12.25,.15,.39],[0,4.11,-5.5],M.steel,architecture,'rear cap');
+box([.39,.15,11.2],[-6,4.11,0],M.steel,architecture,'left cap');
+const rightWall=new THREE.Group();rightWall.name='right cutaway wall';architecture.add(rightWall);
+box([.26,.35,11.2],[6,.14,0],M.concrete,rightWall);
+const frontWall=new THREE.Group();frontWall.name='front cutaway wall';architecture.add(frontWall);
+box([12.2,.24,.25],[0,.08,5.5],M.concrete,frontWall);
+// Roof is deliberately opened as a dollhouse cutaway; perimeter and light fixtures remain.
+const ceiling=new THREE.Group();ceiling.name='ceiling with two strip lights';ceiling.visible=false;architecture.add(ceiling);
+box([12.2,.18,11.2],[0,4.25,0],M.mortar,ceiling,'ceiling panel').visible=false;
+box([12.2,.2,.22],[0,4.18,5.42],M.dark,ceiling);
+box([.22,.2,11.1],[5.92,4.18,0],M.dark,ceiling);
+for(const z of [-1.8,2.1]){
+  box([3.0,.09,.24],[-1.2,4.04,z],M.dark,ceiling,'strip light housing');
+  box([2.75,.035,.15],[-1.2,3.98,z],M.lamp,ceiling,'strip light diffuser');
+}
+
+// Window recess, cold glass, mullions and deep concrete sill.
+box([2.35,.16,.34],[.15,1.72,-5.35],M.paleSteel);
+box([2.22,1.48,.09],[.15,2.5,-5.52],M.blueGlass);
+for(const x of [-.99,1.29])box([.11,1.65,.2],[x,2.5,-5.34],M.dark);
+for(const y of [1.7,3.3])box([2.4,.11,.2],[.15,y,-5.34],M.dark);
+box([.07,1.48,.12],[.15,2.5,-5.27],M.paleSteel);
+box([2.2,.07,.12],[.15,2.5,-5.27],M.paleSteel);
+for(let i=0;i<7;i++)box([.13,.045,.015],[-.75+rnd()*1.8,2+rnd()*1.05,-5.20],M.lamp);
+
+// Sectional roll-up door, tracks, lintel and hinges.
+box([3.45,.24,.38],[4.05,3.48,-5.35],M.dark);
+for(const x of [2.28,5.82])box([.16,3.5,.22],[x,1.7,-5.31],M.dark);
+for(let i=0;i<11;i++){
+  box([3.32,.285,.13],[4.05,.18+i*.292,-5.39],i%2?M.steel:M.paleSteel);
+  box([3.28,.025,.05],[4.05,.32+i*.292,-5.30],M.mortar);
+}
+for(const y of [.7,2.25])for(const x of [2.48,5.62])box([.14,.18,.11],[x,y,-5.22],M.dark);
+box([.36,.08,.09],[5.15,1.35,-5.18],M.dark);
+
+// Central service pad / low lift with hazard corners.
+const pad=new THREE.Group();pad.name='vehicle service pad';scene.add(pad);
+box([4.8,.14,8.65],[.25,.08,.35],M.dark,pad);
+box([4.15,.055,8.15],[.25,.18,.35],new THREE.MeshStandardMaterial({color:0x3d4040,roughness:.82,metalness:.28}),pad);
+for(const x of [-1.65,2.15])box([.18,.05,7.7],[x,.23,.35],M.black,pad);
+for(const z of [-3.83,4.53])for(const x of [-2.03,2.53])for(let k=0;k<5;k++)
+  box([.16,.12,.26],[x+(x<0?-1:1)*k*.16,.16,z],k%2?M.black:M.yellow,pad);
+box([.26,.23,2.55],[2.65,.18,1.6],M.yellow,pad,'wheel stop');
+
+// Angular white coupe, modeled as faceted hulls rather than a single box.
+const car=new THREE.Group();car.name='white wedge sports car';car.position.set(.25,.22,.45);scene.add(car);
+hull([[3.42,1.30,.28,.64],[2.88,1.53,.28,.85],[.75,1.55,.3,1.02],[-2.75,1.48,.3,1.02],[-3.38,1.32,.34,.82]],M.white,car);
+// Crisp body panels preserve the bright, stepped sheet-metal read of the reference.
+const hood=box([2.66,.065,2.22],[0,.955,1.78],M.white,car,'white hood');hood.rotation.x=.075;
+box([2.69,.07,.68],[0,1.035,-2.94],M.white,car,'rear deck');
+for(const s of [-1,1]){
+  box([.07,.57,4.75],[s*1.50,.69,-.18],M.white,car,'white door and quarter panel');
+  box([.32,.16,1.12],[s*1.37,.91,2.08],M.white,car,'front fender');
+  box([.27,.15,1.10],[s*1.35,.96,-2.12],M.white,car,'rear fender');
+}
+box([2.72,.22,.28],[0,.43,3.36],M.black,car);
+box([2.7,.12,.18],[0,.79,3.28],M.white,car);
+box([2.64,.12,.16],[0,.73,-3.28],M.dark,car);
+// Cabin and roof.
+hull([[.72,1.34,1.0,1.03],[-.28,1.03,1.01,1.78],[-1.88,1.02,1.0,1.76],[-2.63,1.33,1.0,1.03]],M.white,car);
+quad([[-1.23,1.055,.68],[1.23,1.055,.68],[.96,1.80,-.28],[-.96,1.80,-.28]],M.glass,car);
+quad([[-1.0,1.78,-1.91],[1.0,1.78,-1.91],[1.26,1.055,-2.57],[-1.26,1.055,-2.57]],M.glass,car);
+box([1.92,.055,1.43],[0,1.80,-1.08],M.white,car,'roof panel');
+for(const s of [-1,1]){
+  const x1=s*1.355,x2=s*1.045;
+  quad([[x1,1.06,.55],[x1,1.06,-.77],[x2,1.75,-.72],[x2,1.75,-.27]],M.glass,car);
+  quad([[x1,1.06,-.91],[x1,1.06,-2.42],[x2,1.74,-1.86],[x2,1.74,-.86]],M.glass,car);
+  box([.045,.075,.62],[s*1.48,.92,-.55],M.dark,car);
+  box([.08,.055,.24],[s*1.51,1.05,-.15],M.dark,car);
+  box([.24,.14,.34],[s*1.55,1.10,.45],M.white,car);
+  // door shut lines and lower dark sill
+  box([.025,.60,.025],[s*1.555,.67,-.88],M.dark,car);
+  box([.055,.12,4.55],[s*1.50,.36,-.1],M.dark,car);
+}
+// Lamps and black front splitter.
+for(const s of [-1,1]){
+  const h=box([.78,.09,.055],[s*.89,.69,3.43],M.lamp,car);h.rotation.z=s*.13;
+  box([.42,.09,.06],[s*1.02,.65,-3.39],M.tail,car);
+}
+box([2.9,.09,.48],[0,.29,3.18],M.black,car);
+// Four tires, metal rims and eight-spoke hubs.
+for(const x of [-1.52,1.52])for(const z of [-2.12,2.05]){
+  const tire=cyl(.64,.34,[x,.57,z],M.rubber,car,20);tire.rotation.z=Math.PI/2;
+  const outer=x<0?x-.19:x+.19;
+  const rim=cyl(.43,.035,[outer,.57,z],M.paleSteel,car,16);rim.rotation.z=Math.PI/2;
+  const hub=cyl(.14,.05,[outer+(x<0?-.025:.025),.57,z],M.dark,car,12);hub.rotation.z=Math.PI/2;
+  for(let k=0;k<8;k++){
+    const spoke=box([.055,.67,.075],[outer+(x<0?-.035:.035),.57,z],M.steel,car);
+    spoke.rotation.x=k*Math.PI/4;
+  }
+}
+
+// Left-wall workbench and red drawer cabinets.
+const bench=new THREE.Group();bench.name='workbench and tool storage';scene.add(bench);
+box([1.25,.16,5.25],[-5.27,1.48,-.25],M.steel,bench);
+for(const z of [-2.25,1.75]){
+  box([1.02,1.35,1.18],[-5.28,.72,z],M.dark,bench);
+  box([1.06,.14,1.2],[-5.28,.12,z],M.black,bench);
+}
+for(const z of [-1.95,1.52]){
+  box([.93,1.12,.95],[-4.99,.76,z],M.red,bench);
+  for(let j=0;j<4;j++){
+    box([.055,.21,.82],[-4.50,.38+j*.255,z],M.red,bench);
+    box([.045,.035,.66],[-4.465,.40+j*.255,z],M.paleSteel,bench);
+  }
+}
+// Framed black tool board on the left wall, tools laid out in the y/z plane.
+box([.12,1.76,4.35],[-5.82,2.63,-.35],M.wood,bench);
+box([.08,1.52,4.08],[-5.74,2.63,-.35],M.black,bench);
+for(const z of [-1.8,-1.15,-.55,.1,.7,1.25]){
+  const col=z<-1.4?M.red:(z<-.7?M.paleSteel:(z<0?M.yellow:(z<.5?M.blueGlass:M.red)));
+  box([.11,.68,.10],[-5.66,2.67,z],col,bench);
+  box([.13,.14,.32],[-5.65,3.03,z],M.paleSteel,bench);
+  if(z<-1.4||z>1)box([.13,.32,.24],[-5.65,2.25,z],col,bench);
+}
+for(const z of [-1.5,-.9,.4,1.05])box([.13,.16,.25],[-5.63,2.05,z],M.yellow,bench);
+// Bench-top battery, charger, vise and small boxes.
+box([.72,.38,.62],[-5.15,1.75,-1.1],M.black,bench);
+box([.58,.20,.50],[-5.12,1.94,-1.1],M.red,bench);
+for(const z of [-1.28,-.94])box([.16,.09,.14],[-5.12,2.08,z],M.steel,bench);
+box([.50,.42,.65],[-5.15,1.77,.55],M.red,bench);
+box([.42,.08,.45],[-5.15,2.01,.55],M.dark,bench);
+box([.16,.13,.48],[-4.72,1.64,1.25],M.yellow,bench);
+box([.28,.22,.32],[-5.12,1.68,1.63],M.steel,bench);
+
+// Rear storage cabinet with countertop, radio and blocky plant.
+const cabinet=new THREE.Group();cabinet.name='rear steel cabinet';scene.add(cabinet);
+box([2.85,1.55,.95],[-3.35,.79,-4.75],M.steel,cabinet);
+box([3.0,.13,1.08],[-3.35,1.61,-4.72],M.paleSteel,cabinet);
+for(let i=0;i<3;i++){
+  const x=-4.28+i*.93;
+  box([.86,1.38,.055],[x,.82,-4.24],M.steel,cabinet);
+  box([.08,.23,.06],[x+.25,1.02,-4.18],M.dark,cabinet);
+  if(i===0)for(let j=0;j<2;j++)box([.50,.035,.05],[x,.62+j*.45,-4.17],M.paleSteel,cabinet);
+}
+box([.72,.42,.50],[-3.95,1.88,-4.65],M.dark,cabinet);
+box([.58,.22,.035],[-3.95,1.91,-4.38],M.yellow,cabinet);
+box([.12,.10,.04],[-4.12,1.91,-4.35],M.black,cabinet);
+const pot=box([.62,.56,.62],[-2.65,1.95,-4.67],M.wood,cabinet);
+box([.12,.78,.12],[-2.65,2.54,-4.67],M.wood,cabinet);
+const leafMats=[0x315e20,0x477c27,0x60972e].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.9}));
+for(let i=0;i<24;i++)box([.26+rnd()*.18,.18+rnd()*.16,.25+rnd()*.18],[-2.65+(rnd()-.5)*1.05,2.45+rnd()*.9,-4.67+(rnd()-.5)*.85],leafMats[i%3],cabinet);
+// Small open utility table beneath the window.
+box([1.65,.13,.85],[.25,1.30,-4.72],M.steel);
+for(const x of [-.45,.95])for(const z of [-5.02,-4.43])box([.10,1.28,.10],[x,.65,z],M.dark);
+box([1.35,.08,.65],[.25,.48,-4.72],M.dark);
+
+// Garage clutter: stacked tires, tool case, barrels, crate, oil containers.
+for(let i=0;i<4;i++){
+  const t=cyl(.50,.24,[-5.25,.15+i*.22,3.25],M.rubber); 
+  cyl(.27,.25,[-5.25,.15+i*.22,3.25],M.dark);
+}
+box([1.25,.48,.72],[-4.60,.28,3.65],M.red);
+box([1.28,.09,.75],[-4.60,.56,3.65],M.dark);
+box([.50,.09,.10],[-4.60,.66,3.65],M.steel);
+for(const x of [-5.05,-4.15])box([.10,.20,.08],[x,.46,4.03],M.paleSteel);
+function barrel(x,z,mat){
+  const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+  cyl(.49,1.25,[0,.65,0],mat,g,20);
+  for(const y of [.08,.38,.92,1.25])cyl(.515,.07,[0,y,0],mat===M.green?M.green:M.dark,g,20);
+  cyl(.43,.025,[0,1.295,0],M.dark,g,20);return g;
+}
+barrel(4.95,-3.65,M.green);barrel(4.7,-2.45,M.steel);
+const crate=new THREE.Group();crate.name='wooden shipping crate';scene.add(crate);
+box([1.05,.95,1.0],[4.75,.50,-1.25],M.wood,crate);
+for(const x of [4.27,5.23])for(const z of [-1.71,-.79])box([.10,1.02,.10],[x,.52,z],M.dark,crate);
+for(const y of [.12,.90]){box([1.12,.10,.08],[4.75,y,-.72],M.wood,crate);box([1.12,.10,.08],[4.75,y,-1.78],M.wood,crate);}
+for(let i=0;i<3;i++)box([.07,.65,.06],[4.45+i*.30,.51,-.70],M.dark,crate);
+for(const p of [[-5.35,.28,2.3],[-4.85,.22,2.45],[3.8,.18,-4.6]]){
+  box([.28,.45,.28],[p[0],p[1],p[2]],M.dark);box([.16,.10,.16],[p[0],p[1]+.27,p[2]],M.red);
+}
+
+// Two warm wall sconces visible in the reference.
+function sconce(pos,left=false){
+  const g=new THREE.Group();g.position.set(...pos);scene.add(g);
+  box([.48,.22,.48],[0,0,0],M.dark,g);
+  box([.36,.06,.36],[0,-.14,0],M.warm,g);
+  box([.22,.20,.22],[0,.18,0],M.dark,g);
+  const light=new THREE.PointLight(0xffb43c,18,6.5,2);light.position.set(0,-.22,0);light.castShadow=true;light.shadow.mapSize.set(512,512);g.add(light);
+}
+sconce([-5.55,3.63,-2.85]);sconce([-2.0,3.64,-5.12]);
+// Broad, believable cool/warm illumination; no ambient-only shading.
+scene.add(new THREE.HemisphereLight(0xbfd3df,0x403c32,1.05));
+const key=new THREE.DirectionalLight(0xfff1d9,2.5);key.position.set(4,11,8);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-10;key.shadow.camera.right=10;key.shadow.camera.top=10;key.shadow.camera.bottom=-10;key.shadow.camera.near=.5;key.shadow.camera.far=35;key.shadow.bias=-.0004;scene.add(key);
+const fill=new THREE.DirectionalLight(0x9ebed2,1.05);fill.position.set(-8,6,1);scene.add(fill);
+for(const z of [-1.8,2.1]){const l=new THREE.PointLight(0xffedcf,10,8,2);l.position.set(-1.2,3.8,z);scene.add(l)}
+const windowLight=new THREE.PointLight(0x70c9ef,8,5,2);windowLight.position.set(.2,2.5,-4.8);scene.add(windowLight);
+
+// Screenshot cameras: reference-like front, three-quarter aerial, and orthographic plan.
+let camera;
+function makeCamera(){
+  if(view==='top'){
+    const aspect=innerWidth/innerHeight, h=12.8;
+    camera=new THREE.OrthographicCamera(-h*aspect/2,h*aspect/2,h/2,-h/2,.1,80);
+    camera.position.set(0,24,.001);camera.up.set(0,0,-1);camera.lookAt(0,0,0);
+  }else{
+    camera=new THREE.PerspectiveCamera(view==='iso'?36:36,innerWidth/innerHeight,.1,100);
+    if(view==='iso')camera.position.set(13.8,16.8,15.5);else camera.position.set(12.8,10.8,15.8);
+    camera.lookAt(0,1.0,-.25);
+  }
+}
+makeCamera();
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);makeCamera()});
+renderer.setAnimationLoop(()=>renderer.render(scene,camera));
+window.__garage={scene,camera,view,renderer};
+window.__sceneReady=true;
+</script>
+</body>
+</html>
